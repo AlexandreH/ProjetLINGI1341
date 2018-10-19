@@ -10,7 +10,8 @@
 
 #include "wait_for_client.h"
 
-int wait_for_client(int sfd){
+int wait_for_client(int sfd)
+{
 	socklen_t address_len = sizeof(struct sockaddr_in6);
 	struct sockaddr_in6 client_addr;
 	memset(&client_addr,0,address_len);
@@ -29,4 +30,9 @@ int wait_for_client(int sfd){
 		return -1; 
 	}
 	return 0;
+}
+
+void receive_packet()
+{
+
 }
