@@ -55,6 +55,6 @@ int main (int argc, char **argv){
     hostname = argv[index];//Hote fourni par l'utilisateur (chaine de caract)
     port = atoi(argv[index+1]);//Port fourni par l'utilisateur (int)
     
-	receive_data(hostname, port, fichier);//reception du packet
+	receive_data(hostname, port, fichierbin);//reception du packet
 	return EXIT_SUCCESS;
 }
