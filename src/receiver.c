@@ -20,9 +20,13 @@ int main (int argc, char **argv){
 	int argu; //valeur de retour de getopt
 	
 	char *fichierbin = NULL; //fichier potentiellement binaire
-	int index;
-    char *hostname = NULL;
-    int port;
+	
+	int index; //va servir pour utiliser les parametres
+	
+	char *hostname = NULL; //va contenir le nom d'hote
+	
+    int port;//va contenir le num de port 
+    
     opterr = 0; //empeche le message d'erreur
     
     while ((argu = getopt(argc, argv, "f:")) != -1)// getopt retourne -1 quand plus de caractere d'option
@@ -50,11 +54,13 @@ int main (int argc, char **argv){
     }
     
      index = optind;//optind vaut l'index du premier elem argv qui n'est pas une option
-    index = optind;//optind vaut l'index du premier elem argv qui n'est pas une option
+     // getopt() permute les éléments de argv au fur et à mesure de son analyse.
+     // Tous les arguments qui ne sont pas des options se trouvent apres les options et débutent à l'index optind
+     
     
     hostname = argv[index];//Hote fourni par l'utilisateur (chaine de caract)
     port = atoi(argv[index+1]);//Port fourni par l'utilisateur (int)
     
-	receive_data(hostname, port, fichierbin);//reception du packet
+	receive_data(hostname, port, fichierbin);//reception du packet, la fonction se trouve dans serverc.c
 	return EXIT_SUCCESS;
 }
