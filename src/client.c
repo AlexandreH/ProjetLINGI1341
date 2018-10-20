@@ -20,7 +20,6 @@ void read_data(int fd, int sfd){
     /* Values needed */
     int seqnum = 0; // correspond au numéro de séquence
     char encoded_data[MAXDATASIZE]; // stocke le paquet encodé 
-    int buffer = 0; // si le buffer est rempli, sinon 1 
     int end_file = 0; // si le fichier n'est pas vide, sinon 1 
 
     /* Packet creation */
@@ -35,7 +34,7 @@ void read_data(int fd, int sfd){
     int timeout = 6000; // 6 secondes; 
 
 
-    while(buffer == 0 || end_file == 0){
+    while(end_file == 0){
         memset((void *)buf1 0, MAXDATASIZE);
         memset((void *)buf2, 0, MAXDATASIZE);
         memset(fds,0,nfds*sizeof(struct pollfd));
@@ -95,7 +94,11 @@ void read_data(int fd, int sfd){
             // on reçois un ACK / NACK 
             if(fds[0].revents & POLLIN)
             {
-                length = read(fds,buf2,length);
+                length = read(fds,buf2,MAXDATASIZE);
+                if(length < 0)
+                {
+                    
+                }
 
                 /*************
                    * TODO *
