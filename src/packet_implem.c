@@ -48,10 +48,9 @@ pkt_t* pkt_new()
 	return new_pkt;
 }
 
-void pkt_del(pkt_t *pkt)
+void pkt_copy(pkt_t* source,pkt_t* dest)
 {
-    free(pkt->payload);
-    free(pkt);
+ 	*dest = *source;
 }
 
 pkt_status_code pkt_decode(const char *data, const size_t len, pkt_t *pkt)
