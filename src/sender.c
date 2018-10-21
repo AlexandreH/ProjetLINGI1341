@@ -12,6 +12,7 @@
 #include <netinet/in.h> /* * sockaddr_in6 */
 #include <netdb.h>
 #include "packet_interface.h"
+#include "send_receive.h"
 #include "client.h"
 
 int main (int argc, char **argv){

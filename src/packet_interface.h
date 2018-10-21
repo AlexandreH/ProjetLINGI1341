@@ -39,7 +39,7 @@ pkt_t* pkt_new();
 /* Libere le pointeur vers la struct pkt, ainsi que toutes les
  * ressources associees
  */
-void pkt_del(pkt_t*);
+void pkt_del(pkt_t* pkt);
 
 /*
  * Decode des donnees recues et cree une nouvelle structure pkt.

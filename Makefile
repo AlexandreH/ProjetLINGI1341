@@ -22,14 +22,19 @@ debug: CFLAGS += -g -DDEBUG -Wno-unused-parameter -fno-omit-frame-pointer
 debug: clean sender receiver 
 
 # We use an implicit rule to build an executable named 'sender'
-sender: src/sender.o src/client.o src/send_receive.o src/packet_implem.o
+sender: 
+	cd src && $(MAKE) 
+	mv src/sender sender
 
 # We use an implicit rule to build an executable named 'receiver'
-receiver: src/receiver.o src/server.o src/send_receive.o src/packet_implem.o
+receiver: 
+	cd src && $(MAKE) 
+	mv src/receiver receiver
 
 #tests : 
+#	cd tests && $(MAKE)
 
 .PHONY: clean
 
 clean:
-	@rm -f sender receiver 
+	cd src && $(MAKE) clean	

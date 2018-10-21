@@ -44,6 +44,12 @@ pkt_t* pkt_new()
 	return new_pkt;
 }
 
+void pkt_del(pkt_t *pkt)
+{
+    free(pkt->payload);
+    free(pkt);
+}
+
 void pkt_copy(pkt_t* source,pkt_t* dest)
 {
  	*dest = *source;
