@@ -5,6 +5,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/select.h>
 #include <netinet/in.h> 
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -72,7 +73,7 @@ void receive_data(const char* hostname, int port, char* file){
 	
 	struct timeval tv;//structure représentant le transmission timer
 	
-	memset(buffer_len,0,MAX_WINDOW_SIZE);//on met les tailles de tous les buffers à 0 (tableau de int)
+	memset(buffer_payload,0,MAX_WINDOW_SIZE);//on met les tailles de tous les buffers à 0 (tableau de int)
 	
 	char bufsfd[528]; //512 de payload, 4 de header, 4 de timestamp, 4 pour CRC1 et 4 pour crc32
 
@@ -193,7 +194,7 @@ void receive_data(const char* hostname, int port, char* file){
 
 }
 
-int send_ack(pkt_t *pkt_ack, int seqnum, int sfd, int ack, uint32_t timestamp){
+int send_ack(pkt_t *pkt_ack, int seqnum, int ack, uint32_t timestamp){
 
 	//On va tester pr voir si on sait bien créer la pkt_ack. Si ca fonctionne, en envoie 0 sinon on renvoie -1
 	

@@ -15,5 +15,5 @@ int wait_for_client(int sfd);
 
 void receive_data(const char *hostname, int port, char *file);
 
-int send_ack(pkt_t *pkt_ack, int seqnum, int sfd, int ack, uint32_t time_data);
+int send_ack(pkt_t *pkt_ack, int seqnum, int ack, uint32_t time_data);
 #endif
