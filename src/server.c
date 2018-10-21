@@ -146,16 +146,16 @@ void receive_data(const char* hostname, int port, char* file){
 					int numSeq = pkt_get_seqnum(pkt_recu);
 					int tr = pkt_get_tr(pkt_recu);
 					int length = pkt_get_length(pkt_recu);
+					uint32_t timestamp = pkt_get_timestamp(pkt_recu);
 
 					
 					if(tr==1)//Si tr vaut 1
 					{
-						int acksend =send_ack(pkt_ack,numSeq,sfd, PTYPE_NACK, pkt_get_timestamp(pkt_recu),window);
-						if(acksend < 0)
+					int nacksend =send_ack(pkt_ack,numSeq,sfd,PTYPE_NACK,timestamp);
+						if(nacksend == -1)
 						{
 							fprintf(stderr,"Probleme dans l'envoie du NACK");
 						}
-
 					}
 					else{//tr vaut 0
 						if(length == 0)
@@ -172,71 +172,55 @@ void receive_data(const char* hostname, int port, char* file){
 							
 							indexBuf = (numeroFenetre*256)-1+numSeq;
 							
-							buffer_len[indexBuf] = pkt_get_length(pkt_recu);
-							buffer_payload[indexBuf] = (char *)pkt_get_payload(pkt_recu);
-							}
-							}
-							}
+							int acksend=send_ack(pkt_ack,numSeq,sfd, PTYPE_ACK,timestamp);
+							if(acksend == -1)
+						{
+							fprintf(stderr,"Probleme dans l'envoie du ACK");
+						}
+						
+						buffer_len[indexBuf] = pkt_get_length(pkt_recu);
+						buffer_payload[indexBuf] = (char *)pkt_get_payload(pkt_recu);
+						}
 						}
 					}
 				}
+			}
+		}
 	
 	close(sfd);
 	close(fd);
 	pkt_del(pkt_ack);
 	pkt_del(pkt_recu);
+
 }
 
-int send_ack(pkt_t *pkt_ack, int seqnum, int sfd, int ack, uint32_t time_data, int window){
+int send_ack(pkt_t *pkt_ack, int seqnum, int sfd, int ack, uint32_t timestamp){
 
+	//On va tester pr voir si on sait bien créer la pkt_ack. Si ca fonctionne, en envoie 0 sinon on renvoie -1
+	
 	pkt_status_code return_status;
-	//Etablissement des valeurs du ack
+	
 	return_status = pkt_set_seqnum(pkt_ack, seqnum+1);
 	if(return_status != PKT_OK){
-		perror("Creation de l'acknowledge : ");
+		fprintf(stderr,"probleme seqnum");
 		return -1;
 	}
-
-	//On met le type à PTYPE_ACK ou PTYPE_NACK en fonction du paramètre passé en argument
-	if(ack == PTYPE_ACK){
-		return_status = pkt_set_type(pkt_ack, PTYPE_ACK);
-	}
-	else if(ack == PTYPE_NACK)
-		return_status = pkt_set_type(pkt_ack, PTYPE_NACK);
-	if(return_status != PKT_OK){
-		perror("Creation de l'acknowledge : ");
-		return -1;
-	}
+	
 	return_status = pkt_set_timestamp(pkt_ack, time_data);
-
-
-	return_status = pkt_set_window(pkt_ack, window);
 	if(return_status != PKT_OK){
-		perror("Creation de l'acknowledge : ");
+		fprintf(stderr,"probleme timestamp");
 		return -1;
 	}
 
-	//Les ack/nack n'ont pas de payload
-	return_status = pkt_set_payload(pkt_ack, NULL, 0);
+	
+	if(ack == PTYPE_NACK){
+		return_status = pkt_set_type(pkt_ack, PTYPE_NACK);
+	}
+	if(ack == PTYPE_ACK)
+		return_status = pkt_set_type(pkt_ack, PTYPE_ACK);
+		
 	if(return_status != PKT_OK){
-		perror("Creation de l'acknowledge : ");
+		fprintf(stderr,"probleme type");
 		return -1;
 	}
-
-	char buf[20];
-	size_t buf_len = 20;
-	//Encodage du ACK/NACK et remplissage de la variable buf
-	return_status = pkt_encode(pkt_ack, buf, &buf_len);
-	if(return_status != PKT_OK){
-		perror("Encodage de l'acknowledge");
-		return -1;
-	}
-	//On envoie le ack/nack encodé
-	if(write(sfd, buf, buf_len) < 0)
-	{
-		perror("Encodage write ack");
-		return -1;
-	}
-
-	return 0;
 }
