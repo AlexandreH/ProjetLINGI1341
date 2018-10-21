@@ -222,4 +222,5 @@ int send_ack(pkt_t *pkt_ack, int seqnum, int sfd, int ack, uint32_t timestamp){
 		fprintf(stderr,"probleme type");
 		return -1;
 	}
+	return 0;
 }
