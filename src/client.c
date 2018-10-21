@@ -23,10 +23,12 @@ void read_write_loop(int fd, int sfd){
     /* Values needed */
     int seqnum = 0; // correspond au numéro de séquence
     int end_file = 0; // si le fichier n'est pas vide, sinon 1 
+    int window = 1; //valeur initiale de window
 
     /* Packet creation */
     pkt_t *pkt_data = pkt_new();
     if(pkt_data == NULL) return;
+    pkt_set_window(pkt_data,window);
     pkt_t *pkt_ack = pkt_new();
     if(pkt_ack == NULL) return;
 
@@ -35,9 +37,9 @@ void read_write_loop(int fd, int sfd){
     char buf1[MAXDATASIZE];
     char buf2[MAXDATASIZE];
     struct pollfd fds[2];
-    int timeout = 6000; // 6 secondes; 
+    int timeout = 5000; // 5 secondes; 
 
-
+    /* Loop to send & receive data */
     while(end_file == 0){
         memset((void *)buf1, 0, MAXDATASIZE);
         memset((void *)buf2, 0, MAXDATASIZE);
@@ -89,7 +91,7 @@ void read_write_loop(int fd, int sfd){
                     }
 
                     // on envoie au receiver 
-                    err = write(sfd,pkt_data,len);
+                    err = write(sfd,buf1,len);
                     if(err < 0)
                     {
                         fprintf(stderr,"ERROR in sending packet : %s \n", strerror(errno));
@@ -98,7 +100,7 @@ void read_write_loop(int fd, int sfd){
                         return; 
                     }
 
-                    fprintf(stderr,"packet %d send \n",seqnum);
+                    fprintf(stderr,"Packet %d sent \n",seqnum);
 
                     seqnum = (seqnum+1)%256;
                 }
@@ -122,18 +124,67 @@ void read_write_loop(int fd, int sfd){
                 }
                 else
                 {
-                    int type = pkt_get_type(pkt_ack);
-                    if(type == 2){
-                        fprintf(stderr,"Ack %d recieved \n",seq);
+                    int ww = pkt_get_window(pkt_ack);
+
+                    if(ww > window)
+                    {
+                        window = ww; 
+                        pkt_set_window(pkt_data,window);
                     }
-                    else if(type == 3)
+
+                    if(pkt_get_type(pkt_ack) == PTYPE_ACK){
+                        fprintf(stderr,"Ack %d recieved \n",seq);
+
+                    }
+                    else if(pkt_get_type(pkt_ack) == PTYPE_NACK){
                         fprintf(stderr, "Nack %d recieved \n",seq);
+
+                    }
 
 
                 }
             }
         }
 
+    }
+
+    // FIn du fichier -> on envoie un packet de taille 0 pour indiquer la fin du transfert 
+
+    pkt_set_length(pkt_data,0);
+    pkt_set_seqnum(pkt_data,seqnum);
+
+    size_t len = MAXDATASIZE;
+    pkt_status_code status = pkt_encode(pkt_data,buf1,&len);
+
+    if(status != PKT_OK)
+    {
+        fprintf(stderr," ERROR in pkt_encode : %s \n", strerror(errno));
+        pkt_del(pkt_data);
+        pkt_del(pkt_ack);
+        return;
+    }
+
+    // on envoie au receiver 
+    int err = write(sfd,buf1,len);
+    if(err < 0)
+    {
+        fprintf(stderr,"ERROR in sending packet : %s \n", strerror(errno));
+        pkt_del(pkt_data);
+        pkt_del(pkt_ack);
+        return; 
+    }
+
+    int end = 0;
+
+    while(end == 0) //on attend de recevoir le dernier ack 
+    {
+        memset((void *)buf1, 0, MAXDATASIZE);
+        memset((void *)buf2, 0, MAXDATASIZE);
+        memset(fds,0,nfds*sizeof(struct pollfd));
+        (fds[0]).fd = sfd;
+        (fds[0]).events = POLLIN|POLLOUT ;
+        (fds[1]).fd = fd; 
+        (fds[1]).events = POLLIN;
     }
 
     pkt_del(pkt_data);
