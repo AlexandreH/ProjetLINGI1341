@@ -224,6 +224,3 @@ void send_data(const char *hostname, int port, char *file)
 
     return;
 }
-
-
-

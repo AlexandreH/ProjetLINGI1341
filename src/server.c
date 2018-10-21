@@ -55,7 +55,7 @@ void receive_data(const char *hostname, int port, char *file)
     /* File (or STDIN) opening */
     int fd;
     if(file != NULL) fd = open(file, O_WRONLY);
-    else fd = STDIN_FILENO;
+    else fd = STDOUT_FILENO;
 
 
     close(sfd);
