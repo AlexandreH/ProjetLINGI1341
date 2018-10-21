@@ -4,6 +4,6 @@
 
 void read_data(int fd, int sfd);
 
-void send_packet(const char *hostname, int port, char *file);
+void send_data(const char *hostname, int port, char *file);
 
 #endif

@@ -6,9 +6,14 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h> 
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <netdb.h>
 
-#include "wait_for_client.h"
+#include "server.h"
+#include "send_receive.h"
+#include "packet_interface.h"
+
 
 int wait_for_client(int sfd)
 {
@@ -32,7 +37,29 @@ int wait_for_client(int sfd)
 	return 0;
 }
 
-void receive_packet()
+void receive_data(const char *hostname, int port, char *file)
 {
+	struct sockaddr_in6 address;
+    memset(&address,0,sizeof(struct sockaddr_in6));
+    const char* msg = real_address(hostname, &address);
+    if(msg != NULL)
+    {
+        fprintf(stderr, "%s \n",strerror(errno));
+        return; 
+    }
 
+    /* Socket creation & connection to receiver address & port */
+
+    int sfd = create_socket(&address, port, NULL, 0);
+    if(sfd == -1) return; 
+
+    /* File (or STDIN) opening */
+    int fd;
+    if(file != NULL) fd = open(file, O_WRONLY);
+    else fd = STDIN_FILENO;
+
+
+    close(sfd);
+    close(fd);
+    return;
 }

@@ -18,10 +18,6 @@ struct __attribute__((__packed__)) pkt {
 	uint32_t CRC2;
 };
 
-void main(){
-	printf("yes \n");
-}
-
 pkt_t* pkt_new()
 {
 	pkt_t *new_pkt = (pkt_t *) malloc(sizeof(pkt_t));

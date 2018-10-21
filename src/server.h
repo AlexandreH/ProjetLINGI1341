@@ -9,3 +9,7 @@
  * and could be repeated several times blocking only at the first call.
  */
 int wait_for_client(int sfd);
+
+void receive_data(const char *hostname, int port, char *file);
+
+#endif

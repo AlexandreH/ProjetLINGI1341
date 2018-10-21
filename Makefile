@@ -22,10 +22,10 @@ debug: CFLAGS += -g -DDEBUG -Wno-unused-parameter -fno-omit-frame-pointer
 debug: clean sender receiver 
 
 # We use an implicit rule to build an executable named 'sender'
-sender: src/sender.o
+sender: src/sender.o src/client.o src/send_receive.o src/packet_implem.o
 
 # We use an implicit rule to build an executable named 'receiver'
-receiver: src/receiver.o
+receiver: src/receiver.o src/server.o src/send_receive.o src/packet_implem.o
 
 #tests : 
 

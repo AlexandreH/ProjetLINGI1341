@@ -8,6 +8,9 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <poll.h>
 #include "client.h"
 #include "send_receive.h"
 #include "packet_interface.h"
@@ -19,12 +22,13 @@ void read_data(int fd, int sfd){
 
     /* Values needed */
     int seqnum = 0; // correspond au numéro de séquence
-    char encoded_data[MAXDATASIZE]; // stocke le paquet encodé 
     int end_file = 0; // si le fichier n'est pas vide, sinon 1 
 
     /* Packet creation */
     pkt_t *pkt_data = pkt_new();
-    if(pkt == NULL) return;
+    if(pkt_data == NULL) return;
+    pkt_t *pkt_ack = pkt_new();
+    if(pkt_ack == NULL) return;
 
 
     nfds_t nfds = 2; 
@@ -35,7 +39,7 @@ void read_data(int fd, int sfd){
 
 
     while(end_file == 0){
-        memset((void *)buf1 0, MAXDATASIZE);
+        memset((void *)buf1, 0, MAXDATASIZE);
         memset((void *)buf2, 0, MAXDATASIZE);
         memset(fds,0,nfds*sizeof(struct pollfd));
         (fds[0]).fd = sfd;
@@ -48,8 +52,9 @@ void read_data(int fd, int sfd){
         if(po == -1)
         {
             fprintf(stderr,"ERR0R in poll function : %s \n",strerror(errno));
-            pkt_del(pkt);
-            return -1;
+            pkt_del(pkt_data);
+            pkt_del(pkt_ack);
+            return;
         } 
         else if(po > 0) 
         {
@@ -63,6 +68,7 @@ void read_data(int fd, int sfd){
                 {
                     fprintf(stderr," ERROR in reading file : %s \n",strerror(errno));
                     pkt_del(pkt_data);
+                    pkt_del(pkt_ack);
                     return;
                 }
                 else if(length == 0) end_file = 1; // fin du fichier 
@@ -72,7 +78,7 @@ void read_data(int fd, int sfd){
                     pkt_set_seqnum(pkt_data,seqnum);
 
                     size_t len = MAXDATASIZE;
-                    pkt_status_code status = pkt_encode(pkt_data,encode_data,&len);
+                    pkt_status_code status = pkt_encode(pkt_data,buf1,&len);
 
                     if(status != PKT_OK)
                     {
@@ -85,6 +91,7 @@ void read_data(int fd, int sfd){
                     {
                         fprintf(stderr,"ERROR in sending packet \n");
                         pkt_del(pkt_data);
+                        pkt_del(pkt_ack);
                         return; 
                     }
                 }
@@ -94,7 +101,7 @@ void read_data(int fd, int sfd){
             // on reçois un ACK / NACK 
             if(fds[0].revents & POLLIN)
             {
-                length = read(fds,buf2,MAXDATASIZE);
+                length = read(sfd,buf2,MAXDATASIZE);
                 if(length < 0)
                 {
                     
@@ -109,7 +116,7 @@ void read_data(int fd, int sfd){
     }
 }
 
-void send_packet(const char *hostname, int port,const char *file)
+void send_data(const char *hostname, int port, char *file)
 {
 
     /* Hostname convertion into sockaddr_in6 address */
@@ -119,7 +126,7 @@ void send_packet(const char *hostname, int port,const char *file)
     const char* msg = real_address(hostname, &address);
     if(msg != NULL)
     {
-        fprintf(stderr, "%s \n",sterror(errno));
+        fprintf(stderr, "%s \n",strerror(errno));
         return; 
     }
 
@@ -129,9 +136,9 @@ void send_packet(const char *hostname, int port,const char *file)
     if(sfd == -1) return; 
 
     /* File (or STDIN) opening */
-
-    if(file != NULL) int fd = open(file, O_RDONLY);
-    else int fd = STDIN_FILENO;
+    int fd;
+    if(file != NULL) fd = open(file, O_RDONLY);
+    else fd = STDIN_FILENO;
 
     /* File reading -> Packet filling  */
 
