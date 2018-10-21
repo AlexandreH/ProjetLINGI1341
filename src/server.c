@@ -194,7 +194,7 @@ void receive_data(const char* hostname, int port, char* file){
 
 }
 
-int send_ack(pkt_t *pkt_ack, int seqnum, int ack, uint32_t timestamp){
+int send_ack(pkt_t *pkt_ack, int seqnum, int ack, uint32_t timestamp){//todo : on teste juste pr l'instant, il faudra aussi envoyer l'ack ou le nack avc cette fonction
 
 	//On va tester pr voir si on sait bien créer la pkt_ack. Si ca fonctionne, en envoie 0 sinon on renvoie -1
 	
