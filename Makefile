@@ -37,5 +37,4 @@ receiver:
 .PHONY: clean
 
 clean:
-	rm sender receiver 
 	cd src && $(MAKE) clean	

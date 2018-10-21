@@ -151,7 +151,7 @@ void receive_data(const char* hostname, int port, char* file){
 					
 					if(tr==1)//Si tr vaut 1
 					{
-					int nacksend =send_ack(pkt_ack,numSeq,sfd,PTYPE_NACK,timestamp);
+					int nacksend =send_ack(pkt_ack,numSeq,PTYPE_NACK,timestamp);
 						if(nacksend == -1)
 						{
 							fprintf(stderr,"Probleme dans l'envoie du NACK");
@@ -172,7 +172,7 @@ void receive_data(const char* hostname, int port, char* file){
 							
 							indexBuf = (numeroFenetre*256)-1+numSeq;
 							
-							int acksend=send_ack(pkt_ack,numSeq,sfd, PTYPE_ACK,timestamp);
+							int acksend=send_ack(pkt_ack,numSeq, PTYPE_ACK,timestamp);
 							if(acksend == -1)
 						{
 							fprintf(stderr,"Probleme dans l'envoie du ACK");
