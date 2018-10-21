@@ -104,7 +104,6 @@ void receive_data(const char* hostname, int port, char* file){
 	
 	int numSeqLogique = 0;//numero de Sequence attendu pour arrivé
 	int indexBuf = 0;//index que va prendre le packet dans le buffer (attention quand SeqNum >255 )
-	int window = 31;
 	int numeroFenetre=0;
 	
 	while(endOfFile){
@@ -206,7 +205,7 @@ int send_ack(pkt_t *pkt_ack, int seqnum, int sfd, int ack, uint32_t timestamp){
 		return -1;
 	}
 	
-	return_status = pkt_set_timestamp(pkt_ack, time_data);
+	return_status = pkt_set_timestamp(pkt_ack, timestamp);
 	if(return_status != PKT_OK){
 		fprintf(stderr,"probleme timestamp");
 		return -1;
