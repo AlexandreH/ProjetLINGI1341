@@ -9,7 +9,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <netdb.h>
-
 #include "server.h"
 #include "send_receive.h"
 #include "packet_interface.h"

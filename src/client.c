@@ -18,7 +18,7 @@
 #define MAXDATASIZE 528 // nombre max d'octets on peut envoyer en un coup 
 
 
-void read_data(int fd, int sfd){
+void read_write_loop(int fd, int sfd){
 
     /* Values needed */
     int seqnum = 0; // correspond au numéro de séquence
@@ -82,18 +82,25 @@ void read_data(int fd, int sfd){
 
                     if(status != PKT_OK)
                     {
-                        fprintf(stderr," ERROR in pkt_encode \n");
+                        fprintf(stderr," ERROR in pkt_encode : %s \n", strerror(errno));
+                        pkt_del(pkt_data);
+                        pkt_del(pkt_ack);
+                        return;
                     }
 
                     // on envoie au receiver 
                     err = write(sfd,pkt_data,len);
                     if(err < 0)
                     {
-                        fprintf(stderr,"ERROR in sending packet \n");
+                        fprintf(stderr,"ERROR in sending packet : %s \n", strerror(errno));
                         pkt_del(pkt_data);
                         pkt_del(pkt_ack);
                         return; 
                     }
+
+                    fprintf(stderr,"packet %d send \n",seqnum);
+
+                    seqnum = (seqnum+1)%256;
                 }
 
 
@@ -104,16 +111,33 @@ void read_data(int fd, int sfd){
                 length = read(sfd,buf2,MAXDATASIZE);
                 if(length < 0)
                 {
-                    
+                    fprintf(stderr," ERROR in recieving ack : %s \n",strerror(errno));
+                    pkt_del(pkt_data);
+                    pkt_del(pkt_ack);
                 }
+                int seq =  pkt_get_seqnum(pkt_ack);
+                if(length > 0 && pkt_decode(buf2,length,pkt_ack) != PKT_OK)
+                {
+                    fprintf(stderr,"ERROR in recieving ack num : %d \n",seq);
+                }
+                else
+                {
+                    int type = pkt_get_type(pkt_ack);
+                    if(type == 2){
+                        fprintf(stderr,"Ack %d recieved \n",seq);
+                    }
+                    else if(type == 3)
+                        fprintf(stderr, "Nack %d recieved \n",seq);
 
-                /*************
-                   * TODO *
-                **************/
+
+                }
             }
         }
 
     }
+
+    pkt_del(pkt_data);
+    pkt_del(pkt_ack);
 }
 
 void send_data(const char *hostname, int port, char *file)
@@ -142,6 +166,7 @@ void send_data(const char *hostname, int port, char *file)
 
     /* File reading -> Packet filling  */
 
+    read_write_loop(fd,sfd);
 
     close(sfd);
     close(fd);
