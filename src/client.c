@@ -31,6 +31,7 @@ void read_write_loop(int fd, int sfd){
     pkt_set_window(pkt_data,window);
     pkt_t *pkt_ack = pkt_new();
     if(pkt_ack == NULL) return;
+    pkt_set_window(pkt_ack,window);
 
 
     nfds_t nfds = 2; 

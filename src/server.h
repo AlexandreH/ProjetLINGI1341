@@ -1,6 +1,8 @@
 #ifndef __SERVER_H_
 #define __SERVER_H_
 
+#include "packet_interface.h"
+
 /* Block the caller until a message is received on sfd,
  * and connect the socket to the source addresse of the received message
  * @sfd: a file descriptor to a bound socket but not yet connected
@@ -8,10 +10,13 @@
  * @POST: This call is idempotent, it does not 'consume' the data of the message,
  * and could be repeated several times blocking only at the first call.
  */
- 
-#include "packet_interface.h"
 
 int wait_for_client(int sfd);
+
+
+/* 
+ *
+ */
 
 void receive_data(const char *hostname, int port, char *file);
 

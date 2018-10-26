@@ -2,7 +2,7 @@
 #define __CLIENT_H_
 
 
-void read_data(int fd, int sfd);
+void read_write_data(int fd, int sfd);
 
 void send_data(const char *hostname, int port, char *file);
 
