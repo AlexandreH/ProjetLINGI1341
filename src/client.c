@@ -192,7 +192,7 @@ void read_write_loop(int fd, int sfd){
     pkt_del(pkt_ack);
 }
 
-void send_data(const char *hostname, int port, char *file)
+int send_data(const char *hostname, int port, char *file, int *fd, int *sfd)
 {
 
     /* Hostname convertion into sockaddr_in6 address */
@@ -200,28 +200,29 @@ void send_data(const char *hostname, int port, char *file)
     struct sockaddr_in6 address;
     memset(&address,0,sizeof(struct sockaddr_in6));
     const char* msg = real_address(hostname, &address);
-    if(msg != NULL)
-    {
-        fprintf(stderr, "%s \n",strerror(errno));
-        return; 
+    if(msg != NULL){
+        fprintf(stderr,"Error in adrress convertion : %s \n", msg);
+        return -1;
     }
 
     /* Socket creation & connection to receiver address & port */
 
-    int sfd = create_socket(NULL, 0, &address, port);
-    if(sfd == -1) return; 
+    *sfd = create_socket(NULL, 0, &address, port);
+    if(*sfd == -1){
+        fprintf(stderr,"Error in creating socket : %s \n", strerror(errno));
+        return -1; 
+    }
 
     /* File (or STDIN) opening */
-    int fd;
-    if(file != NULL) fd = open(file, O_RDONLY);
-    else fd = STDIN_FILENO;
 
-    /* File reading -> Packet filling  */
+    if(file != NULL) *fd = open(file, O_RDONLY);
+    else *fd = STDIN_FILENO;
 
-    read_write_loop(fd,sfd);
+    if(*fd == -1){ 
+        close(*sfd); 
+        fprintf(stderr,"Error in opening file : %s \n", strerror(errno));
+        return -1;
+    }
 
-    close(sfd);
-    close(fd);
-
-    return;
+    return 0;
 }

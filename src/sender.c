@@ -18,7 +18,7 @@
 int main (int argc, char **argv){
 	
 	int argu; //valeur de retour de getopt
-		char *fichierbin = NULL; //fichier potentiellement binaire	
+	char *fichierbin = NULL; //fichier potentiellement binaire	
 	int index; //va servir pour utiliser les parametres	
 	char *hostname = NULL; //va contenir le nom d'hote	
     int port;//va contenir le num de port   
@@ -44,7 +44,7 @@ int main (int argc, char **argv){
         }
     }
     
-    if (optind >= argc) 
+    if(optind >= argc) 
     {
         fprintf(stderr, "Expected argument after options\n");
         exit(EXIT_FAILURE);
@@ -57,7 +57,19 @@ int main (int argc, char **argv){
     hostname = argv[index];//Hote fourni par l'utilisateur (chaine de caract)
     port = atoi(argv[index+1]);//Port fourni par l'utilisateur (int)
     
-    send_data(hostname, port, fichierbin);//appel de send_data pour la création et l'envoi des packets, fonction dans client.c
-    return EXIT_SUCCESS;
+    int fd,sfd;
+    int err = send_data(hostname, port, fichierbin, &fd, &sfd);
 
+    if(err == -1){
+        close(sfd);
+        close(fd);
+        return EXIT_FAILURE; 
+    }
+
+    read_write_loop(fd,sfd);
+
+    close(sfd);
+    close(fd);
+
+    return EXIT_SUCCESS;
 }
