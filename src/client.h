@@ -7,16 +7,15 @@
  *
  * @fd: un file descriptor vers un fichier 
  * @sfd: un socket connecté à une adresse de réception et à un port 
- * @return : dès que c'est la fin du fichier et que la connection 
- * 				est fermée 
+ * @return : -1 en cas d'erreur, 0 sinon 
  */
-void read_write_loop(int fd, int sfd);
+int read_write_loop(int fd, int sfd);
 
 /* Cette fonction : 
  * - converti l'adresse hostname en une adresse IPv6 
  *		utilisable par le système
  * - créé un socket et le connecte à l'adresse hostname et au port 
- * - créé le file descriptor en lien avec le fichier file 
+ * - ouvre le fichier file en lecture 
  * 		(STDIN si file == NULL)
  * - imprime un message d'erreur sur la sortie d'erreur 
  * 		standard en cas de problème 

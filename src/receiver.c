@@ -9,10 +9,12 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <netinet/in.h> /* * sockaddr_in6 */
+#include <netinet/in.h> 
 #include <netdb.h>
-#include "packet_interface.h"
+
 #include "server.h"
+#include "send_receive.h"
+#include "packet_interface.h"
 
 
 int main (int argc, char **argv){
@@ -24,10 +26,9 @@ int main (int argc, char **argv){
     int port;//va contenir le num de port 
     opterr = 0; //empeche le message d'erreur
     
-    while((argu = getopt(argc, argv, "f:")) != -1)// getopt retourne -1 quand plus de caractere d'option
-    {
-        switch(argu)
-        {
+    while((argu = getopt(argc, argv, "f:")) != -1){
+    // getopt retourne -1 quand plus de caractere d'option
+        switch(argu){
             case 'f':
                 fichierbin = optarg; //optarg: pointeur vers l'argument qui suit "f"
                 break;
@@ -38,26 +39,42 @@ int main (int argc, char **argv){
                     fprintf(stderr, "Unknown option `-%c'.\n", optopt);
                 else
                     fprintf(stderr,"Unknown option character `\\x%x'.\n",optopt);
-                return 1;
+                return EXIT_FAILURE; 
             default:
                 abort ();
         }
     }
 
-	if(optind >= argc) 
-    {
+	if(optind >= argc){
         fprintf(stderr, "Expected argument after options\n");
-        exit(EXIT_FAILURE);
+        return EXIT_FAILURE; 
     }
     
-     index = optind;//optind vaut l'index du premier elem argv qui n'est pas une option
+     index = optind;
+     //optind vaut l'index du premier elem argv qui n'est pas une option
      // getopt() permute les éléments de argv au fur et à mesure de son analyse.
      // Tous les arguments qui ne sont pas des options se trouvent apres les options et débutent à l'index optind
-     
     
     hostname = argv[index];//Hote fourni par l'utilisateur (chaine de caract)
     port = atoi(argv[index+1]);//Port fourni par l'utilisateur (int)
     
-	receive_data(hostname, port, fichierbin);//reception du packet, la fonction se trouve dans serverc.c
-	return EXIT_SUCCESS;
+    int fd,sfd;
+    int err;
+    err = receive_data(hostname, port, fichierbin, &fd, &sfd);
+    if(err == -1){
+        close(fd);
+        close(sfd);
+        return EXIT_FAILURE; 
+    }
+
+    err = read_write_loop(fd,sfd);
+    if(err == -1){
+        close(fd);
+        close(sfd);
+        return EXIT_FAILURE; 
+    }
+
+    close(sfd);
+    close(fd);
+    return EXIT_SUCCESS;
 }
