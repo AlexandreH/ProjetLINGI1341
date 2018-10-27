@@ -32,4 +32,4 @@ receiver: receiver.o server.o send_receive.o packet_implem.o -lz
 .PHONY: clean
 
 clean:
-	rm -f *.o sender receiver 
+	rm -f sender receiver *.o
