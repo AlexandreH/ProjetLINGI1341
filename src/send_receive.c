@@ -8,11 +8,8 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+
 #include "client.h"
-
-
-
-
 
 const char * real_address(const char *address, struct sockaddr_in6 *rval){
 
@@ -44,7 +41,7 @@ int create_socket(struct sockaddr_in6 *source_addr,
 
 	int sfd = socket(AF_INET6,SOCK_DGRAM,IPPROTO_UDP); 
 	if(sfd == -1){
-		fprintf(stderr," ERREUR in socket : %s \n",strerror(errno));
+		fprintf(stderr," Erreur dans la fonction socket : %s \n",strerror(errno));
 		return -1;
 	}
 
@@ -52,7 +49,7 @@ int create_socket(struct sockaddr_in6 *source_addr,
 		source_addr->sin6_port = htons(src_port); 
 		int bin = bind(sfd,(const struct sockaddr *) source_addr,sizeof(struct sockaddr_in6));
 		if(bin == -1){
-			fprintf(stderr,"ERREUR in bind : %s \n",strerror(errno));
+			fprintf(stderr,"Erreur dans la fonction bind : %s \n",strerror(errno));
 			return -1;
 		}
 	}
@@ -61,7 +58,7 @@ int create_socket(struct sockaddr_in6 *source_addr,
 		dest_addr->sin6_port = htons(dst_port);
 		int con = connect(sfd,(const struct sockaddr *) dest_addr,sizeof(struct sockaddr_in6));
 		if(con == -1){
-			fprintf(stderr,"ERREUR in connect : %s \n",strerror(errno));
+			fprintf(stderr,"Erreur dans la fonction connect : %s \n",strerror(errno));
 			return -1; 
 		}
 	}

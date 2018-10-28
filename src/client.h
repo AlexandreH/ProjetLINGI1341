@@ -1,9 +1,10 @@
 #ifndef __CLIENT_H_
 #define __CLIENT_H_
 
-/* Lis sur le fichier à l'aide du file descriptor et envoie les 
- * données  à une adresse à l'aide du socket tout en 
+/* Envoie des données lues sur un fichier (ou sur STDIN) à l'aide 
+ * du file descriptor à une adresse à l'aide du socket tout en 
  * recevant des données de cette même adresse (des acquittements)
+ * Elle utilise les paquets 
  *
  * @fd: un file descriptor vers un fichier 
  * @sfd: un socket connecté à une adresse de réception et à un port 

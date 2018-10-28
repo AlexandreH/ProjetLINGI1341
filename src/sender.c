@@ -25,6 +25,8 @@ int main (int argc, char **argv){
     int port;//va contenir le num de port   
     opterr = 0; //empeche le message d'erreur
 
+    /* Lecture des arguments */ 
+
     while((argu = getopt(argc, argv, "f:")) != -1){
     // getopt retourne -1 quand plus de caractere d'option
         switch(argu){
@@ -33,11 +35,11 @@ int main (int argc, char **argv){
                 break;
             case '?':
                 if(optopt == 'c')
-                    fprintf(stderr, "Option -%c requires an argument.\n", optopt);
+                    fprintf(stderr, "L'option -%c a besoin d'un argument \n", optopt);
                 else if(isprint(optopt))
-                    fprintf(stderr, "Unknown option `-%c'.\n", optopt);
+                    fprintf(stderr, "Option inconnue `-%c' \n", optopt);
                 else
-                    fprintf (stderr,"Unknown option character `\\x%x'.\n",optopt);
+                    fprintf (stderr,"Charactère d'option inconnu `\\x%x' \n",optopt);
                 return 1;
             default:
                 abort ();
@@ -45,7 +47,7 @@ int main (int argc, char **argv){
     }
     
     if(optind >= argc){
-        fprintf(stderr, "Expected argument after options\n");
+        fprintf(stderr, "Attente d'arguments après les options \n");
         exit(EXIT_FAILURE);
     }
 
@@ -56,10 +58,13 @@ int main (int argc, char **argv){
     
     hostname = argv[index];//Hote fourni par l'utilisateur (chaine de caract)
     port = atoi(argv[index+1]);//Port fourni par l'utilisateur (int)
-    
     int fd,sfd;
     int err;
+
+    /* Lancement de la procédure pour envoyer des données */
+
     err = send_data(hostname, port, fichierbin, &fd, &sfd);
+    fprintf(stderr,"%d \n", sfd);
     if(err == -1){
         close(fd);
         close(sfd);
@@ -73,8 +78,7 @@ int main (int argc, char **argv){
         return EXIT_FAILURE; 
     }
 
-    close(sfd);
     close(fd);
-    printf("OK \n");
+    close(sfd);
     return EXIT_SUCCESS;
 }

@@ -16,29 +16,32 @@
 #include "send_receive.h"
 #include "packet_interface.h"
 
-#define MAXDATASIZE 528 // nombre max d'octets on peut envoyer en un coup 
-
-
 int read_write_loop(int fd, int sfd){
 
     /* Valurs nécessaires */
     
     int seqnum = 0; // correspond au numéro de séquence
-    int end_file = 0; // si le fichier n'est pas vide, sinon 1 
+    int end_file = 1; // si le fichier n'est pas vide, sinon 0
     int window = 1; //valeur initiale de window
     int timeout = 5000; // 5 secondes; 
+    int err; // erreur lors de l'écriture dans le socket 
+    pkt_status_code status;
 
     /* Création de paquets */
 
+    /* Paquet pour envoyer des données */
     pkt_t *pkt_data = pkt_new();
     if(pkt_data == NULL){
+        fprintf(stderr,"Erreur lors de la création d'une paquet");
         pkt_del(pkt_data);
         return -1; 
     }
     pkt_set_window(pkt_data,window);
 
+    /* Paquet pour recevoir des acquittements */
     pkt_t *pkt_ack = pkt_new();
     if(pkt_ack == NULL){
+        fprintf(stderr,"Erreur lors de la création d'une paquet");
         pkt_del(pkt_data);
         pkt_del(pkt_ack);
         return -1;
@@ -47,26 +50,26 @@ int read_write_loop(int fd, int sfd){
 
 
     nfds_t nfds = 2; 
-    char buf1[MAXDATASIZE];
-    char buf2[MAXDATASIZE];
+    char payload[MAX_PAYLOAD_SIZE]; // pour lire le payload
+    char encoded_pkt[MAX_DATA_SIZE]; // pour encoder le paquet 
     struct pollfd fds[2];
 
     /* Boucle pour envoyer et recevoir des données */
 
-    while(end_file == 0){
-        memset((void *)buf1, 0, MAXDATASIZE);
-        memset((void *)buf2, 0, MAXDATASIZE);
+    while(end_file)
+    {
+        memset((void *)payload, 0, MAX_PAYLOAD_SIZE);
+        memset((void *)encoded_pkt, 0, MAX_DATA_SIZE);
         memset(fds,0,nfds*sizeof(struct pollfd));
         (fds[0]).fd = sfd;
         (fds[0]).events = POLLIN|POLLOUT ;
         (fds[1]).fd = fd; 
         (fds[1]).events = POLLIN;
 
-        int err; 
         int po = poll(fds,nfds,timeout);
         if(po == -1)
         {
-            fprintf(stderr,"ERR0R in poll function : %s \n",strerror(errno));
+            fprintf(stderr,"Erreur dans la fonction poll : %s \n",strerror(errno));
             pkt_del(pkt_data);
             pkt_del(pkt_ack);
             return -1;
@@ -78,42 +81,42 @@ int read_write_loop(int fd, int sfd){
             // lecture dans le fichier 
             if(fds[1].revents & POLLIN)  
             {
-                length = read(fd,buf1,MAXDATASIZE); // nombre d'octets lus 
+                length = read(fd,payload,MAX_PAYLOAD_SIZE); // nombre d'octets lus 
                 if(length < 0)
                 {
-                    fprintf(stderr," ERROR in reading file : %s \n",strerror(errno));
+                    fprintf(stderr," Erreur lors de la lecture d'un fichier : %s \n",strerror(errno));
                     pkt_del(pkt_data);
                     pkt_del(pkt_ack);
                     return -1; 
                 }
-                else if(length == 0) end_file = 1; // fin du fichier 
+                else if(length == 0) end_file = 0; // fin du fichier 
                 else
                 {
-                    pkt_set_payload(pkt_data,buf1,length);
+                    pkt_set_payload(pkt_data,encoded_pkt,length);
                     pkt_set_seqnum(pkt_data,seqnum);
 
-                    size_t len = MAXDATASIZE;
-                    pkt_status_code status = pkt_encode(pkt_data,buf1,&len);
+                    size_t len = MAX_DATA_SIZE;
+                    status = pkt_encode(pkt_data,encoded_pkt,&len);
 
                     if(status != PKT_OK)
                     {
-                        fprintf(stderr," ERROR in pkt_encode : %s \n", strerror(errno));
+                        fprintf(stderr," Erreur d'encodage d'un paquet : %s \n", strerror(errno));
                         pkt_del(pkt_data);
                         pkt_del(pkt_ack);
                         return -1;
                     }
 
                     // on envoie au receiver 
-                    err = write(sfd,buf1,len);
+                    err = write(sfd,encoded_pkt,len);
                     if(err < 0)
                     {
-                        fprintf(stderr,"ERROR in sending packet : %s \n", strerror(errno));
+                        fprintf(stderr,"Erreur lors de l'envoie d'un paquet : %s \n", strerror(errno));
                         pkt_del(pkt_data);
                         pkt_del(pkt_ack);
                         return -1; 
                     }
 
-                    fprintf(stderr,"Packet %d sent \n",seqnum);
+                    fprintf(stderr,"Paquet numéro %d envoyé \n",seqnum);
 
                     seqnum = (seqnum+1)%256;
                 }
@@ -123,17 +126,17 @@ int read_write_loop(int fd, int sfd){
             // on reçois un ACK / NACK 
             if(fds[0].revents & POLLIN)
             {
-                length = read(sfd,buf2,MAXDATASIZE);
+                length = read(sfd,encoded_pkt,MAX_DATA_SIZE);
                 if(length < 0)
                 {
-                    fprintf(stderr," ERROR in recieving ack : %s \n",strerror(errno));
+                    fprintf(stderr," Erreur de lecture de l'acquittement : %s \n",strerror(errno));
                     pkt_del(pkt_data);
                     pkt_del(pkt_ack);
                 }
                 int seq =  pkt_get_seqnum(pkt_ack);
-                if(length > 0 && pkt_decode(buf2,length,pkt_ack) != PKT_OK)
+                if(length > 0 && pkt_decode(encoded_pkt,length,pkt_ack) != PKT_OK)
                 {
-                    fprintf(stderr,"ERROR in recieving ack num : %d \n",seq);
+                    fprintf(stderr,"Erreur de décodage du paquet d'acquittemnt numéro : %d \n",seq);
                 }
                 else
                 {
@@ -146,11 +149,11 @@ int read_write_loop(int fd, int sfd){
                     }
 
                     if(pkt_get_type(pkt_ack) == PTYPE_ACK){
-                        fprintf(stderr,"Ack %d recieved \n",seq);
+                        fprintf(stderr,"Acquittemnt %d reçu \n",seq);
 
                     }
                     else if(pkt_get_type(pkt_ack) == PTYPE_NACK){
-                        fprintf(stderr, "Nack %d recieved \n",seq);
+                        fprintf(stderr, "Non-acquittement %d reçu \n",seq);
 
                     }
 
@@ -166,22 +169,22 @@ int read_write_loop(int fd, int sfd){
     pkt_set_length(pkt_data,0);
     pkt_set_seqnum(pkt_data,seqnum);
 
-    size_t len = MAXDATASIZE;
-    pkt_status_code status = pkt_encode(pkt_data,buf1,&len);
+    size_t len = MAX_DATA_SIZE;
+    status = pkt_encode(pkt_data,encoded_pkt,&len);
 
     if(status != PKT_OK)
     {
-        fprintf(stderr," ERROR in pkt_encode : %s \n", strerror(errno));
+        fprintf(stderr," Erreur d'encodage d'un paquet : %s \n", strerror(errno));
         pkt_del(pkt_data);
         pkt_del(pkt_ack);
         return -1;
     }
 
     // on envoie au receiver 
-    int err = write(sfd,buf1,len);
+    err = write(sfd,encoded_pkt,len);
     if(err < 0)
     {
-        fprintf(stderr,"ERROR in sending packet : %s \n", strerror(errno));
+        fprintf(stderr,"Erreur lors de l'envoie d'un paquet : %s \n", strerror(errno));
         pkt_del(pkt_data);
         pkt_del(pkt_ack);
         return -1;
@@ -191,8 +194,8 @@ int read_write_loop(int fd, int sfd){
 
     while(end == 0) //on attend de recevoir le dernier ack 
     {
-        memset((void *)buf1, 0, MAXDATASIZE);
-        memset((void *)buf2, 0, MAXDATASIZE);
+        memset((void *)payload, 0, MAX_PAYLOAD_SIZE);
+        memset((void *)encoded_pkt, 0, MAX_DATA_SIZE);
         memset(fds,0,nfds*sizeof(struct pollfd));
         (fds[0]).fd = sfd;
         (fds[0]).events = POLLIN|POLLOUT ;
@@ -213,7 +216,7 @@ int send_data(const char *hostname, int port, char *file, int *fd, int *sfd){
     memset(&address,0,sizeof(struct sockaddr_in6));
     const char* msg = real_address(hostname, &address);
     if(msg != NULL){
-        fprintf(stderr,"Error in adrress convertion : %s \n", msg);
+        fprintf(stderr,"Erreur lors de la convertion d'adresse : %s \n", msg);
         return -1;
     }
 
@@ -222,7 +225,7 @@ int send_data(const char *hostname, int port, char *file, int *fd, int *sfd){
     *sfd = create_socket(NULL, 0, &address, port);
     if(*sfd == -1){
         close(*sfd);
-        fprintf(stderr,"Error in creating socket : %s \n", strerror(errno));
+        fprintf(stderr,"Erreur lors de la création d'un socket : %s \n", strerror(errno));
         return -1; 
     }
 
@@ -234,7 +237,7 @@ int send_data(const char *hostname, int port, char *file, int *fd, int *sfd){
     if(*fd == -1){ 
         close(*sfd); 
         close(*fd);
-        fprintf(stderr,"Error in opening file : %s \n", strerror(errno));
+        fprintf(stderr,"Erreur lors de l'ouverture d'un fichier : %s \n", strerror(errno));
         return -1;
     }
 
