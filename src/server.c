@@ -74,6 +74,7 @@ int read_write_loop(int fd,int sfd){
     }
 
     nfds_t nfds = 2; 
+    char payload[MAX_PAYLOAD_SIZE];
     char encoded_pkt[MAX_DATA_SIZE]; // pour encoder le paquet 
     struct pollfd fds[2];
 
@@ -121,12 +122,9 @@ int read_write_loop(int fd,int sfd){
                         int seqnum = pkt_get_seqnum(pkt_data);
                         int tr = pkt_get_tr(pkt_data);
                         int len = pkt_get_length(pkt_data);
-                        //fprintf(stderr," %s \n", payload); 
-                        //uint32_t timestamp = pkt_get_timestamp(pkt_data);
-                        
+                        uint32_t timestamp = pkt_get_timestamp(pkt_data);
+
                         err = write(fd,pkt_get_payload(pkt_data),len);
-                        fprintf(stderr,"taille du payload = %i \n",len);
-                        fprintf(stderr,"%s \n",pkt_get_payload(pkt_data));
                         if(err == -1)
                         {
                             fprintf(stderr,"Erreur lors de l'écriture d'un payload : %s \n", strerror(errno));
