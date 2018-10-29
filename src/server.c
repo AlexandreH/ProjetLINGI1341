@@ -10,6 +10,7 @@
 #include <fcntl.h>
 #include <netdb.h>
 #include <poll.h>
+#include <sys/select.h>
 
 #include "server.h"
 #include "send_receive.h"
@@ -42,25 +43,23 @@ int wait_for_client(int sfd){
 	return 0;
 }
 
-
-int read_write_loop(int sfd,int fd){
-
-
+int read_write_loop(int fd,int sfd){
     
-	/* Valurs nécessaires */
+    /* Valurs nécessaires */
     
     int seqnum_waited = 0; // correspond au numéro de séquence attendu
     int end_file = 1; // 1 tant qu'on reçoit des données, sinon 0
     int timeout = 5000; // 5 secondes; 
-    //int err;
+    int err;
     pkt_status_code status;
     // COMMMENT CHOISIR VALEUR POUR WINDOW ? // 
 
-	/* Création de paquets */
+    /* Création de paquets */
 
     /* Paquet pour recevoir des données */
     pkt_t *pkt_data = pkt_new(); 
     if(pkt_data == NULL){
+        fprintf(stderr,"Erreur lors de la création d'un paquet \n");
         pkt_del(pkt_data);
         return -1; 
     }
@@ -68,20 +67,17 @@ int read_write_loop(int sfd,int fd){
     /* Paquet pour envoyer des acquittements */
     pkt_t *pkt_ack = pkt_new();
     if(pkt_ack == NULL){
+        fprintf(stderr,"Erreur lors de la création d'un paquet \n");
         pkt_del(pkt_data);
         pkt_del(pkt_ack);
         return -1;
     }
 
     nfds_t nfds = 2; 
-    const char *payload; // pour lire le payload
     char encoded_pkt[MAX_DATA_SIZE]; // pour encoder le paquet 
     struct pollfd fds[2];
 
     /* Boucle pour recevoir et envoyer des données */
-
-
-    fprintf(stderr,"ou est ce qu'on arrive? -1 \n");
 
     while(end_file)
     {
@@ -125,10 +121,19 @@ int read_write_loop(int sfd,int fd){
                         int seqnum = pkt_get_seqnum(pkt_data);
                         int tr = pkt_get_tr(pkt_data);
                         int len = pkt_get_length(pkt_data);
-                        payload = pkt_get_payload(pkt_data);
+                        //fprintf(stderr," %s \n", payload); 
                         //uint32_t timestamp = pkt_get_timestamp(pkt_data);
-
-                        fprintf(stderr,"%s \n",payload);
+                        
+                        err = write(fd,pkt_get_payload(pkt_data),len);
+                        fprintf(stderr,"taille du payload = %i \n",len);
+                        fprintf(stderr,"%s \n",pkt_get_payload(pkt_data));
+                        if(err == -1)
+                        {
+                            fprintf(stderr,"Erreur lors de l'écriture d'un payload : %s \n", strerror(errno));
+                            pkt_del(pkt_data);
+                            pkt_del(pkt_ack);
+                            return -1; 
+                        }
 
                         if(tr == 1)
                         {
@@ -136,9 +141,8 @@ int read_write_loop(int sfd,int fd){
                         }
                         else
                         {
-
-                            // fin de la réception de données 
                             if(len == 0){
+                            // fin de la réception de données 
                                 end_file = 0; 
                                 fprintf(stderr," Fin de la réception de données \n");
                             }
@@ -149,13 +153,12 @@ int read_write_loop(int sfd,int fd){
                                 }
                             }
 
+                        fprintf(stderr, "Acquittement numéro %i envoyé \n",seqnum_waited);
                             // ENVOI D UN ACK
                             seqnum_waited++;
                         }
                     }
                 }
-            }
-            else if(fds[0].revents & POLLOUT){
             }
         }
     }
