@@ -107,18 +107,25 @@ int read_write_loop(int fd, int sfd){
                     }
 
                     // on envoie au receiver 
-                    err = write(sfd,encoded_pkt,len);
-                    if(err < 0)
+                    if(fds[0].revents & POLLOUT)
                     {
-                        fprintf(stderr,"Erreur lors de l'envoie d'un paquet : %s \n", strerror(errno));
-                        pkt_del(pkt_data);
-                        pkt_del(pkt_ack);
-                        return -1; 
+                        err = write(sfd,encoded_pkt,len);
+                        if(err < 0)
+                        {
+                            fprintf(stderr,"Erreur lors de l'envoie d'un paquet : %s \n", strerror(errno));
+                            pkt_del(pkt_data);
+                            pkt_del(pkt_ack);
+                            return -1; 
+                        }
+
+                        fprintf(stderr,"Paquet numéro %d envoyé \n",seqnum);
+
+                        seqnum = (seqnum+1)%256;
                     }
+                    else
+                    {
 
-                    fprintf(stderr,"Paquet numéro %d envoyé \n",seqnum);
-
-                    seqnum = (seqnum+1)%256;
+                    }
                 }
 
 
@@ -126,6 +133,7 @@ int read_write_loop(int fd, int sfd){
             // on reçois un ACK / NACK 
             if(fds[0].revents & POLLIN)
             {
+                fprintf(stderr,"POLLIN \n");
                 length = read(sfd,encoded_pkt,MAX_DATA_SIZE);
                 if(length < 0)
                 {

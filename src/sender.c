@@ -64,7 +64,6 @@ int main (int argc, char **argv){
     /* Lancement de la procédure pour envoyer des données */
 
     err = send_data(hostname, port, fichierbin, &fd, &sfd);
-    fprintf(stderr,"%d \n", sfd);
     if(err == -1){
         close(fd);
         close(sfd);

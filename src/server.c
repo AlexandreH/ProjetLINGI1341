@@ -42,8 +42,11 @@ int wait_for_client(int sfd){
 	return 0;
 }
 
+
 int read_write_loop(int sfd,int fd){
 
+
+    
 	/* Valurs nécessaires */
     
     int seqnum_waited = 0; // correspond au numéro de séquence attendu
@@ -82,10 +85,10 @@ int read_write_loop(int sfd,int fd){
 
     while(end_file)
     {
-        memset((void *)encoded_pkt, 0, MAX_DATA_SIZE);
         memset(fds,0,nfds*sizeof(struct pollfd));
+        memset((void *)encoded_pkt, 0, MAX_DATA_SIZE);
         (fds[0]).fd = sfd;
-        (fds[0]).events = POLLIN|POLLOUT ;
+        (fds[0]).events = POLLIN|POLLOUT;
         (fds[1]).fd = fd; 
         (fds[1]).events = POLLOUT;
 
@@ -97,6 +100,7 @@ int read_write_loop(int sfd,int fd){
             pkt_del(pkt_ack);
             return -1;
         } 
+        else if(po == 0){} //on attend de nouvelles données 
         else if(po > 0)
         {
             int length; 
@@ -104,7 +108,6 @@ int read_write_loop(int sfd,int fd){
             // réception de données
             if(fds[0].revents & POLLIN)
             {
-                fprintf(stderr,"ou est ce qu'on arrive? 1 \n");
                 length = read(sfd,encoded_pkt, MAX_DATA_SIZE);
                 if(length < 0)
                 {
@@ -147,11 +150,13 @@ int read_write_loop(int sfd,int fd){
                             }
 
                             // ENVOI D UN ACK
+                            seqnum_waited++;
                         }
                     }
                 }
             }
-            seqnum_waited++;
+            else if(fds[0].revents & POLLOUT){
+            }
         }
     }
 

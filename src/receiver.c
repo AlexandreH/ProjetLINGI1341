@@ -65,7 +65,6 @@ int main (int argc, char **argv){
     /* Lancement de la procédure pour recevoir des données */
 
     err = receive_data(hostname, port, fichierbin, &fd, &sfd);
-    fprintf(stderr,"%d \n",sfd);
     if(err == -1){
         close(fd);
         close(sfd);
