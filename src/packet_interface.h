@@ -20,6 +20,8 @@ typedef enum {
 #define MAX_WINDOW_SIZE 31
 /* Taille maximale permise pour un paquet */
 #define MAX_DATA_SIZE 528 
+/* Taille des acquittements */
+#define ACK_NACK_SIZE 12 
 
 /* Valeur de retours des fonctions */
 typedef enum {

@@ -50,10 +50,9 @@ int read_write_loop(int fd,int sfd){
     int seqnum_waited = 0; // correspond au numéro de séquence attendu
     int end_file = 1; // 1 tant qu'on reçoit des données, sinon 0
     int timeout = 5000; // 5 secondes; 
+    int window = 5; 
     int err;
     pkt_status_code status;
-    // COMMMENT CHOISIR VALEUR POUR WINDOW ? // 
-
     /* Création de paquets */
 
     /* Paquet pour recevoir des données */
@@ -136,6 +135,10 @@ int read_write_loop(int fd,int sfd){
                         if(tr == 1)
                         {
                             // ENVOI D UN NACK
+                            err = send_ack(pkt_ack,sfd,PTYPE_NACK,seqnum,timestamp,window);
+                            if(err == -1){
+                                fprintf(stderr,"Erreur lors de l'envoie de l'acquittement : %s \n",strerror(errno));
+                            }
                         }
                         else
                         {
@@ -153,6 +156,10 @@ int read_write_loop(int fd,int sfd){
 
                         fprintf(stderr, "Acquittement numéro %i envoyé \n",seqnum_waited);
                             // ENVOI D UN ACK
+                            err = send_ack(pkt_ack,sfd,PTYPE_ACK,seqnum,timestamp,window);
+                            if(err == -1){
+                                fprintf(stderr,"Erreur lors de l'envoie de l'acquittement : %s \n",strerror(errno));
+                            }
                             seqnum_waited++;
                         }
                     }
@@ -212,4 +219,70 @@ int receive_data(const char* hostname, int port, char* file, int *fd, int *sfd){
     fprintf(stderr,"Connection au sender \n");
 
     return 0; 
+}
+
+int send_ack(pkt_t * pkt, int sfd, int type, int seqnum, uint32_t timestamp, int window){
+
+    /* Remplissage de l'acquittement */ 
+
+    pkt_status_code status;
+    int err; 
+    char buf[ACK_NACK_SIZE];
+    size_t length = ACK_NACK_SIZE;
+
+    /* Type */ 
+    if(type == PTYPE_ACK){
+        status = pkt_set_type(pkt, PTYPE_ACK);
+    }  
+    else{
+        status = pkt_set_type(pkt,PTYPE_NACK);
+    }
+    if(status != PKT_OK){
+        fprintf(stderr,"Erreur lors de la création de l'acquittement \n");
+        return -1; 
+    }
+
+    /* Window */
+    status = pkt_set_window(pkt,window);
+    if(status != PKT_OK){
+        fprintf(stderr,"Erreur lors de la création de l'acquittement \n");
+        return -1; 
+    }
+
+    /* Seqnum */
+    status = pkt_set_seqnum(pkt,seqnum);
+    if(status != PKT_OK){
+        fprintf(stderr,"Erreur lors de la création de l'acquittement \n");
+        return -1; 
+    }
+
+    /* Timestamp */ 
+    status = pkt_set_timestamp(pkt,timestamp);
+    if(status != PKT_OK){
+        fprintf(stderr,"Erreur lors de la création de l'acquittement \n");
+        return -1; 
+    }
+
+    /* Payload */ 
+    status = pkt_set_payload(pkt,NULL,0); // payload vide 
+    if(status != PKT_OK){
+        fprintf(stderr,"Erreur lors de la création de l'acquittement \n");
+        return -1; 
+    }
+
+    /* Encodage de l'acquittement */ 
+
+    status = pkt_encode(pkt,buf,&length);
+    if(status != PKT_OK){
+        fprintf(stderr,"Erreur lors de l(encodage de l'acquittement \n");
+        return -1; 
+    }
+
+    err = write(sfd,buf,length);
+    if(err == -1){
+        fprintf(stderr,"Erreur lors de l'envoi de l'acquittement : %s \n", strerror(errno));
+        return -1; 
+    }
+
+    return 0;
 }

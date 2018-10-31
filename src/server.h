@@ -41,7 +41,16 @@ int read_write_loop(int fd, int sfd);
  */ 
 int receive_data(const char *hostname, int port, char *file, int *fd, int *sfd);
 
-
-
-int send_ack(pkt_t *pkt_ack, int seqnum, int ack, uint32_t time_data);
+/* Cette fonction rempli un paquet avec les données d'un acquittement,
+ * l'encode dans un buffer, et l'envoie sur le socket 
+ *
+ * @pkt : le paquet à remplir 
+ * @sfd : le socket où envoyer l'acquittement 
+ * @type : le type d'acquittement (NACK ou ACK)
+ * @seqnum : le numéro de séquence reçu 
+ * @timestamp : la donnée à mettre dans le timestamp du paquet
+ * @window : la taille de la window du receiver  
+ * @return : -1 en cas d'erreur, 0 sinon 
+ */ 
+int send_ack(pkt_t * pkt, int sfd, int type, int seqnum, uint32_t timestamp, int window);
 #endif
