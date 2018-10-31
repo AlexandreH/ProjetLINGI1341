@@ -258,11 +258,10 @@ pkt_status_code pkt_set_type(pkt_t *pkt, const ptypes_t type)
 
 pkt_status_code pkt_set_tr(pkt_t *pkt, const uint8_t tr)
 {
-	if(pkt_get_type(pkt) == PTYPE_DATA){
-		pkt->tr = tr; 
-		return PKT_OK;
+	if(tr == 1 && pkt_get_type(pkt) != PTYPE_DATA){
+		return E_TR;
 	}
-	return E_TR;
+	return PKT_OK;
 }
 
 pkt_status_code pkt_set_window(pkt_t *pkt, const uint8_t window)

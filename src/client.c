@@ -134,8 +134,38 @@ int read_write_loop(int fd, int sfd){
                     pkt_del(pkt_ack);
                 }
                 int seq =  pkt_get_seqnum(pkt_ack);
+                status = pkt_decode(encoded_pkt,length,pkt_ack);
+                if(status == E_TYPE){
+                    fprintf(stderr,"E_TYPE");
+                }
+                else if(status == E_TR){
+                    fprintf(stderr,"E_TR");
+                }
+                else if(status == E_LENGTH){
+                    fprintf(stderr,"E_LENGTH");
+                }
+                else if(status == E_CRC){
+                    fprintf(stderr,"E_CRC");
+                }
+                else if(status == E_WINDOW){
+                    fprintf(stderr,"E_WINDOW");
+                }
+                else if(status == E_SEQNUM){
+                    fprintf(stderr,"E_SEQNUM");
+                }
+                else if(status == E_NOMEM){
+                    fprintf(stderr,"E_NOMEM");
+                }
+                else if(status == E_NOHEADER){
+                    fprintf(stderr,"E_NOHEADER");
+                }
+                else if(status == E_UNCONSISTENT){
+                    fprintf(stderr,"E_UNCONSISTENT");
+                }
+            
                 if(length > 0 && pkt_decode(encoded_pkt,length,pkt_ack) != PKT_OK)
-                {
+                {   
+
                     fprintf(stderr,"Erreur de décodage du paquet d'acquittemnt numéro : %d \n",seq);
                 }
                 else
