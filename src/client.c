@@ -126,7 +126,7 @@ int read_write_loop(int fd, int sfd){
             // on reçois un ACK / NACK 
             if(fds[0].revents & POLLIN)
             {
-                length = read(sfd,encoded_pkt,MAX_DATA_SIZE);
+                length = read(sfd,encoded_pkt,ACK_NACK_SIZE);
                 if(length < 0)
                 {
                     fprintf(stderr," Erreur de lecture de l'acquittement : %s \n",strerror(errno));
@@ -135,35 +135,7 @@ int read_write_loop(int fd, int sfd){
                 }
                 int seq =  pkt_get_seqnum(pkt_ack);
                 status = pkt_decode(encoded_pkt,length,pkt_ack);
-                if(status == E_TYPE){
-                    fprintf(stderr,"E_TYPE");
-                }
-                else if(status == E_TR){
-                    fprintf(stderr,"E_TR");
-                }
-                else if(status == E_LENGTH){
-                    fprintf(stderr,"E_LENGTH");
-                }
-                else if(status == E_CRC){
-                    fprintf(stderr,"E_CRC");
-                }
-                else if(status == E_WINDOW){
-                    fprintf(stderr,"E_WINDOW");
-                }
-                else if(status == E_SEQNUM){
-                    fprintf(stderr,"E_SEQNUM");
-                }
-                else if(status == E_NOMEM){
-                    fprintf(stderr,"E_NOMEM");
-                }
-                else if(status == E_NOHEADER){
-                    fprintf(stderr,"E_NOHEADER");
-                }
-                else if(status == E_UNCONSISTENT){
-                    fprintf(stderr,"E_UNCONSISTENT");
-                }
-            
-                if(length > 0 && pkt_decode(encoded_pkt,length,pkt_ack) != PKT_OK)
+                if(length > 0 && status != PKT_OK)
                 {   
 
                     fprintf(stderr,"Erreur de décodage du paquet d'acquittemnt numéro : %d \n",seq);
@@ -179,7 +151,7 @@ int read_write_loop(int fd, int sfd){
                     }
 
                     if(pkt_get_type(pkt_ack) == PTYPE_ACK){
-                        fprintf(stderr,"Acquittemnt %d reçu \n",seq);
+                        fprintf(stderr,"Acquittement %d reçu \n",seq);
 
                     }
                     else if(pkt_get_type(pkt_ack) == PTYPE_NACK){
@@ -194,7 +166,7 @@ int read_write_loop(int fd, int sfd){
 
     }
 
-    // FIn du fichier -> on envoie un packet de taille 0 pour indiquer la fin du transfert 
+    // Fin du fichier -> on envoie un packet de taille 0 pour indiquer la fin du transfert 
 
     pkt_set_length(pkt_data,0);
     pkt_set_seqnum(pkt_data,seqnum);
@@ -212,7 +184,7 @@ int read_write_loop(int fd, int sfd){
 
     // on envoie au receiver 
     err = write(sfd,encoded_pkt,len);
-    if(err < 0)
+    if(err == -1)
     {
         fprintf(stderr,"Erreur lors de l'envoie d'un paquet : %s \n", strerror(errno));
         pkt_del(pkt_data);
@@ -220,17 +192,47 @@ int read_write_loop(int fd, int sfd){
         return -1;
     }
 
-    int end = 0;
+    int end = 1;
 
-    while(end == 0) //on attend de recevoir le dernier ack 
+    while(end) //on attend de recevoir le dernier ack 
     {
-        memset((void *)payload, 0, MAX_PAYLOAD_SIZE);
         memset((void *)encoded_pkt, 0, MAX_DATA_SIZE);
         memset(fds,0,nfds*sizeof(struct pollfd));
         (fds[0]).fd = sfd;
         (fds[0]).events = POLLIN|POLLOUT ;
         (fds[1]).fd = fd; 
         (fds[1]).events = POLLIN;
+
+        int po = poll(fds,nfds,timeout);
+        if(po == -1)
+        {
+            fprintf(stderr,"Erreur dans la fonction poll : %s \n",strerror(errno));
+            pkt_del(pkt_data);
+            pkt_del(pkt_ack);
+            return -1;
+        } 
+        else if(po > 0) 
+        {
+            if(fds[0].revents & POLLIN)
+            {
+                int length = read(sfd,encoded_pkt,ACK_NACK_SIZE);
+                status = pkt_decode(encoded_pkt,length,pkt_ack);
+                if(status == PKT_OK){
+                    fprintf(stderr,"Acquittement de fin de transmission reçu \n");
+                    end = 0; 
+                }
+            }
+            else{
+                err =write(sfd,encoded_pkt,len);
+                if(err == -1)
+                {
+                    fprintf(stderr,"Erreur lors de l'envoie d'un paquet : %s \n", strerror(errno));
+                    pkt_del(pkt_data);
+                    pkt_del(pkt_ack);
+                    return -1;
+                }
+            }
+        }        
     }
 
     pkt_del(pkt_data);

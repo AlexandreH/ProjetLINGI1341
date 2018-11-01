@@ -53,6 +53,7 @@ int read_write_loop(int fd,int sfd){
     int window = 5; 
     int err;
     pkt_status_code status;
+
     /* Création de paquets */
 
     /* Paquet pour recevoir des données */
@@ -73,7 +74,7 @@ int read_write_loop(int fd,int sfd){
     }
 
     nfds_t nfds = 2; 
-    char payload[MAX_PAYLOAD_SIZE];
+    char *payload; 
     char encoded_pkt[MAX_DATA_SIZE]; // pour encoder le paquet 
     struct pollfd fds[2];
 
@@ -96,7 +97,6 @@ int read_write_loop(int fd,int sfd){
             pkt_del(pkt_ack);
             return -1;
         } 
-        else if(po == 0){} //on attend de nouvelles données 
         else if(po > 0)
         {
             int length; 
@@ -104,15 +104,14 @@ int read_write_loop(int fd,int sfd){
             // réception de données
             if(fds[0].revents & POLLIN)
             {
-                length = read(sfd,encoded_pkt, MAX_DATA_SIZE);
+                length = read(sfd,encoded_pkt,MAX_DATA_SIZE);
                 if(length < 0)
                 {
                     fprintf(stderr," Erreur lors de la lecture de données : %s \n",strerror(errno));
                     pkt_del(pkt_data);
                     pkt_del(pkt_ack);
                     return -1; 
-                }
-                else if(length == 0){} // fin de réception? 
+                } 
                 else
                 {
                     status = pkt_decode(encoded_pkt,length,pkt_data);
@@ -123,7 +122,10 @@ int read_write_loop(int fd,int sfd){
                         int len = pkt_get_length(pkt_data);
                         uint32_t timestamp = pkt_get_timestamp(pkt_data);
 
-                        err = write(fd,pkt_get_payload(pkt_data),len);
+                        payload = malloc(sizeof(char)*len);
+                        payload =(char *) pkt_get_payload(pkt_data);
+                        err = write(fd,payload,len);
+                        fprintf(stderr," %s \n",payload);
                         if(err == -1)
                         {
                             fprintf(stderr,"Erreur lors de l'écriture d'un payload : %s \n", strerror(errno));
@@ -137,29 +139,29 @@ int read_write_loop(int fd,int sfd){
                             // ENVOI D UN NACK
                             err = send_ack(pkt_ack,sfd,PTYPE_NACK,seqnum,timestamp,window);
                             if(err == -1){
-                                fprintf(stderr,"Erreur lors de l'envoie de l'acquittement : %s \n",strerror(errno));
+                                fprintf(stderr,"Erreur lors de l'envoi de l'acquittement : %s \n",strerror(errno));
                             }
                         }
                         else
                         {
-                            if(len == 0){
-                            // fin de la réception de données 
-                                end_file = 0; 
-                                fprintf(stderr," Fin de la réception de données \n");
-                            }
-                            else
-                            {
-                                if(seqnum != seqnum_waited){
-                                   fprintf(stderr,"Le numéro de séquence reçu %d est différent de celui attendu %d \n", seqnum, seqnum_waited);
-                                }
+                            if(seqnum != seqnum_waited){
+                               fprintf(stderr,"Le numéro de séquence reçu %d est différent de celui attendu %d \n", seqnum, seqnum_waited);
                             }
 
-                        fprintf(stderr, "Acquittement numéro %i envoyé \n",seqnum_waited);
                             // ENVOI D UN ACK
                             err = send_ack(pkt_ack,sfd,PTYPE_ACK,seqnum,timestamp,window);
                             if(err == -1){
-                                fprintf(stderr,"Erreur lors de l'envoie de l'acquittement : %s \n",strerror(errno));
+                                fprintf(stderr,"Erreur lors de l'envoi de l'acquittement : %s \n",strerror(errno));
                             }
+
+                            fprintf(stderr, "Acquittement numéro %i envoyé \n",seqnum);
+
+                            if(len == 0){
+                            // fin de la réception de données 
+                                end_file = 0; 
+                                fprintf(stderr,"Fin de la réception de données \n");
+                            }
+
                             seqnum_waited++;
                         }
                     }
