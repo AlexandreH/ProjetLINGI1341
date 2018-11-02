@@ -228,7 +228,7 @@ int teardown(void) {return 0;}
 	printf("\nChaque suite correspond à un fichier de notre dossier src\n");
 	printf("Chaque test correspond a une fonction.\n");
 	printf("Il peut y avoir un ou plusieurs asserts par test.\n");
-	printf("\nSeules les suites contenant des erreurs apparaitront dans les détails.\n");
+	printf("\nSeules les suites contenant des asserts failed apparaitront dans les détails.\n");
 	
 	CU_basic_run_tests(); //lancement des tests
 	CU_basic_show_failures(CU_get_failure_list());
