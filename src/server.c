@@ -183,7 +183,7 @@ int receive_data(const char* hostname, int port, char* file, int *fd, int *sfd){
     memset(&address,0,sizeof(struct sockaddr_in6));
     const char* msg = real_address(hostname, &address);
     if(msg != NULL){
-        fprintf(stderr,"Erreur lors de la convertion d'adresse : %s \n", msg);
+        fprintf(stderr,"Erreur lors de la conversion d'adresse : %s \n", msg);
         return -1;
     }
 
