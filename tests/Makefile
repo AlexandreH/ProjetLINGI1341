@@ -24,6 +24,7 @@ debug: clean sender receiver
 
 # We use an implicit rule to build an executable named 'test'
 test: ../src/packet_implem.o $(LFDFLAGS)
+test: ../src/send_receive.o $(LFDFLAGS)
 
 clean:
 	rm -f test 
