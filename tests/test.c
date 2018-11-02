@@ -3,6 +3,8 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <sys/time.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 
 #include <CUnit/CUnit.h>	
 #include <CUnit/Basic.h>
@@ -58,9 +60,16 @@ void test_set_tr(void)
   CU_ASSERT_EQUAL(pkt_get_type(pkt),PTYPE_DATA)//Comme on a le tr posé à 1, le type doit etre PTYPE_DATA
 }
 
-void test_4(void)
+void test_set_window(void)
 {
-  CU_ASSERT(FALSE);
+  pkt_t* pkt = pkt_new();
+  pkt_status_code status=PKT_OK;
+
+  status=pkt_set_window(pkt,MAX_WINDOW_SIZE-1);//on met une taille de window correcte
+  CU_ASSERT_EQUAL(status,PKT_OK);//taille valide
+  
+  status=pkt_set_window(pkt,MAX_WINDOW_SIZE+1);//on met une taille de window non correcte
+  CU_ASSERT_NOT_EQUAL(status,PKT_OK);//taille invalide
 }
 
 void test_5(void)
@@ -70,13 +79,13 @@ void test_5(void)
 int setup(void)  {return 0;}
 int teardown(void) {return 0;}
 
-int main(int argc, char **argv)
+int main()
 {
 	if (CUE_SUCCESS != CU_initialize_registry()){return CU_get_error();}
 	CU_pSuite pSuite = NULL;
 	pSuite = CU_add_suite("Premiere suite de tests", setup, teardown);
 	if(NULL == pSuite) 
-	{//CU_cleanup_registry();
+	{CU_cleanup_registry();
 		return CU_get_error();
 		}
 	
@@ -87,13 +96,13 @@ int main(int argc, char **argv)
     (NULL == CU_add_test(pSuite, "isEqualString", test_5)))
     {
 		printf("Tous les tests ne se sont pas effectue avec succes\n");
-		//CU_cleanup_registry();
+		CU_cleanup_registry();
 		return CU_get_error();
     }
 	printf("\nVoici les resultat de notre premiere suite de tests:\n");
 	CU_basic_run_tests();
 	CU_basic_show_failures(CU_get_failure_list());
-	//CU_cleanup_registery();
+	CU_cleanup_registry();
 	printf("\n");
 		return 0;		
 }

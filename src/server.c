@@ -154,7 +154,7 @@ int read_write_loop(int fd,int sfd){
                                 fprintf(stderr,"Erreur lors de l'envoi de l'acquittement : %s \n",strerror(errno));
                             }
 
-                            fprintf(stderr, "\nAcquittement numéro %i envoyé \n",seqnum);
+                            fprintf(stderr, "Acquittement numéro %i envoyé \n",seqnum);
 
                             if(len == 0){
                             // fin de la réception de données
