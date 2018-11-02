@@ -9,8 +9,6 @@ CFLAGS += -fstack-protector-all # Add canary code to detect stack smashing
 CFLAGS += -D_POSIX_C_SOURCE=201112L -D_XOPEN_SOURCE # feature_test_macros for getpot and getaddrinfo
 CFLAGS += -g
 
-# We have no libraries to link against except libc, but we want to keep
-# the symbols for debugging
 LFDFLAGS += -lz
 
 # Default target
@@ -25,11 +23,6 @@ debug: clean sender receiver
 sender: sender.o client.o send_receive.o packet_implem.o -lz
 
 receiver: receiver.o server.o send_receive.o packet_implem.o -lz
-
-#tests:
-#	cd ../tests && $(MAKE)
-
-.PHONY: clean
 
 clean:
 	rm -f sender receiver *.o
