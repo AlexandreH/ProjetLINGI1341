@@ -35,7 +35,7 @@ void test_2(void)
   pkt_t* pkt = pkt_new();
   pkt_status_code status=PKT_OK;
 
-  pkt_set_type(pkt,PTYPE_ACK);//on teste le set_type
+  status=pkt_set_type(pkt,PTYPE_ACK);//on teste le set_type
   CU_ASSERT_EQUAL(status,PKT_OK);//pas d'erreur de retour de la fonction si type correct
 
   status=pkt_set_type(pkt,10);//on essaye un type qui existe pas
