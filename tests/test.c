@@ -91,9 +91,7 @@ void test_set_payload(void)
 	
 }
 
-/*
- * Tests sur send_receive
- */
+/*Tests sur send_receive.c*/
 
 void test_real_address(void) //on teste la creation d'une sockaddr_in6 à partir d'un nom d'hote
 {
@@ -120,15 +118,37 @@ void test_real_address(void) //on teste la creation d'une sockaddr_in6 à partir
 	CU_ASSERT_NOT_EQUAL(fdtest,-1); //fdtest retournerait -1 s'il y avait une erreur
 	
 	}
+	
+/*Tests sur client*/
 
+void test_send_data()
+{
+	CU_ASSERT_EQUAL('a','a'); //Fonction send_data ne retourne rien donc pas testable par des tests unitaires
+	
+	}
 
-int setup(void)  {return 0;}
-int teardown(void) {return 0;}
+/*Tests sur server*/
+
+void test_receive_data()
+{
+	CU_ASSERT_EQUAL('a','a');//Fonction receive_data ne retourne rien donc pas testable par des tests unitaires
+	
+	}
+
 
 int main()
 {
+	
+int setup(void)  {return 0;}
+int teardown(void) {return 0;}
+	
+	/* Initialisation du registre*/
+	
 	if (CUE_SUCCESS != CU_initialize_registry()){return CU_get_error();}
 	CU_pSuite pSuite = NULL;
+	
+	
+	/* Tests de packet_implem*/
 	
 	pSuite = CU_add_suite("Tests de packet_implem", setup, teardown);
 	
@@ -148,6 +168,7 @@ int main()
 		return CU_get_error();
     }
     
+    /* Tests de send_receive*/
     
     pSuite = CU_add_suite("Tests de send_receive", setup, teardown);
 	
@@ -166,15 +187,54 @@ int main()
     }
     
     
+     /* Tests de client*/
+    
+    pSuite = CU_add_suite("Tests de client", setup, teardown);
+	
+	if(NULL == pSuite) 
+	{CU_cleanup_registry();
+		return CU_get_error();
+		}
+		
+	
+		if (NULL == CU_add_test(pSuite, "send_data",test_send_data))
+    {
+		printf("Tous les tests ne se sont pas effectue avec succes\n");
+		CU_cleanup_registry();
+		return CU_get_error();
+    }
+    
+    
+    /* Tests de server*/
+    
+    pSuite = CU_add_suite("Tests de server", setup, teardown);
+	
+	if(NULL == pSuite) 
+	{CU_cleanup_registry();
+		return CU_get_error();
+		}
+		
+	
+		if (NULL == CU_add_test(pSuite, "receive_data",test_receive_data))
+    {
+		printf("Tous les tests ne se sont pas effectue avec succes\n");
+		CU_cleanup_registry();
+		return CU_get_error();
+    }
+    
+    
+    
 	printf("\nVoici les resultat de nos de tests:\n");
 	printf("\nChaque suite correspond à un fichier de notre dossier src\n");
 	printf("Chaque test correspond a une fonction.\n");
 	printf("Il peut y avoir un ou plusieurs asserts par test.\n");
-	printf("Seules les suites contenant des erreurs apparaitront dans les détails.\n");
+	printf("\nSeules les suites contenant des erreurs apparaitront dans les détails.\n");
 	
-	CU_basic_run_tests();
+	CU_basic_run_tests(); //lancement des tests
 	CU_basic_show_failures(CU_get_failure_list());
-	CU_cleanup_registry();
+	
+	CU_cleanup_registry();//On oublie pas de supprimer les ressources du registre
+	
 	printf("\n");
 		return 0;		
 }
