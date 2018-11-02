@@ -28,11 +28,11 @@ sender:
 
 # We use an implicit rule to build an executable named 'receiver'
 receiver: 
-	cd src && $(MAKE) 
 	mv src/receiver receiver
 
-#tests : 
-#	cd tests && $(MAKE)
+test : 
+	cd tests && $(MAKE)
+	mv tests/test test
 
 .PHONY: clean
 
