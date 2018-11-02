@@ -13,9 +13,9 @@
 int read_write_loop(int fd, int sfd);
 
 /* Cette fonction :
- * - converti l'adresse hostname en une adresse IPv6
+ * - convertit l'adresse hostname en une adresse IPv6
  *		utilisable par le système
- * - créé un socket et le connecte à l'adresse hostname et au port
+ * - crée un socket et le connecte à l'adresse hostname et au port
  * - ouvre le fichier file en lecture
  * 		(STDIN si file == NULL)
  * - imprime un message d'erreur sur la sortie d'erreur
