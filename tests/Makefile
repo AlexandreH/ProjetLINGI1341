@@ -10,19 +10,23 @@ CFLAGS += -D_POSIX_C_SOURCE=201112L -D_XOPEN_SOURCE # feature_test_macros for ge
 CFLAGS += -g
 
 LFDFLAGS += -lz
+LFDFLAGS += -lcunit
+LFDFLAGS += -L/$(HOME)/local/include 
+LFDFLAGS += -L/$(HOME)/local/lib 
+
+INCLUDE += I$(HOME)/local/include
+INCLUDE += -I$(HOME)/local/lib
 
 # Default target
-all: clean sender receiver
+all: test
  
 # If we run `make debug` instead, keep the debug symbols for gdb
 # and define the DEBUG macro.
 debug: CFLAGS += -g -DDEBUG -Wno-unused-parameter -fno-omit-frame-pointer
 debug: clean sender receiver
 
-# We use an implicit rule to build an executable named 'sender'
-sender: sender.o client.o send_receive.o packet_implem.o $(LFDFLAGS)
-
-receiver: receiver.o server.o send_receive.o packet_implem.o $(LFDFLAGS)
+# We use an implicit rule to build an executable named 'test'
+test: ../src/packet_implem.o $(LFDFLAGS)
 
 clean:
-	rm -f sender receiver *.o
+	rm -f test 
