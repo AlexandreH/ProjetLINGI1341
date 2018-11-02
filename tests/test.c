@@ -30,12 +30,12 @@ void test_pkt_new(void)
   pkt_del(pkt);
 }
 
-void test_2(void)
+void test_set_type(void)
 {
   pkt_t* pkt = pkt_new();
   pkt_status_code status=PKT_OK;
 
-  pkt_set_type(pkt,PTYPE_ACK);//on teste le set_type
+  status=pkt_set_type(pkt,PTYPE_ACK);//on teste le set_type
   CU_ASSERT_EQUAL(status,PKT_OK);//pas d'erreur de retour de la fonction si type correct
 
   status=pkt_set_type(pkt,10);//on essaye un type qui existe pas
@@ -43,12 +43,19 @@ void test_2(void)
 
   status=pkt_set_type(pkt,1);//on essaye un type ACK
   CU_ASSERT_EQUAL(pkt_get_type(pkt),PTYPE_DATA);//on a le bon type
+  pkt_del(pkt);
 
 }
 
-void test_3(void)
+void test_set_tr(void)
 {
-  CU_ASSERT_STRING_EQUAL("premierstring", "deuxiemestring");
+  pkt_t* pkt = pkt_new();
+  pkt_status_code status=PKT_OK;
+
+  status=pkt_set_tr(pkt,1);//on teste le set_tr en placant tr à 1
+  CU_ASSERT_EQUAL(status,PKT_OK);//pas d'erreur de retour de la fonction si tr correct
+
+  CU_ASSERT_EQUAL(pkt_get_type(pkt),PTYPE_DATA)//Comme on a le tr posé à 1, le type doit etre PTYPE_DATA
 }
 
 void test_4(void)
@@ -74,8 +81,8 @@ int main(int argc, char **argv)
 		}
 	
 	if ((NULL == CU_add_test(pSuite, "isTrue",test_pkt_new)) ||
-    (NULL == CU_add_test(pSuite, "isNotEqual", test_2)) ||
-    (NULL == CU_add_test(pSuite, "isEqualString", test_3)) ||
+    (NULL == CU_add_test(pSuite, "isNotEqual", test_set_type)) ||
+    (NULL == CU_add_test(pSuite, "isEqualString", test_set_tr)) ||
     (NULL == CU_add_test(pSuite, "IsFalse", test_4)) ||
     (NULL == CU_add_test(pSuite, "isEqualString", test_5)))
     {
