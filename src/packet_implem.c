@@ -50,11 +50,6 @@ void pkt_del(pkt_t *pkt)
     free(pkt);
 }
 
-void pkt_copy(pkt_t* source,pkt_t* dest)
-{
- 	*dest = *source;
-}
-
 pkt_status_code pkt_decode(const char *data, const size_t len, pkt_t *pkt)
 {
 	/* Vérification de la taille du paquet */

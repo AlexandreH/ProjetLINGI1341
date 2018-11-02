@@ -92,7 +92,7 @@ int read_write_loop(int fd, int sfd){
                 else if(length == 0) end_file = 0; // fin du fichier
                 else
                 {
-                    pkt_set_payload(pkt_data,encoded_pkt,length);
+                    pkt_set_payload(pkt_data,payload,length);
                     pkt_set_seqnum(pkt_data,seqnum);
 
                     size_t len = MAX_DATA_SIZE;
