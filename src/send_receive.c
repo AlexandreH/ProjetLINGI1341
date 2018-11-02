@@ -17,36 +17,34 @@ const char * real_address(const char *address, struct sockaddr_in6 *rval){
 
 	memset(&hints,0,sizeof(struct addrinfo));
 	hints.ai_family = AF_INET6;  // IPv6
-	hints.ai_socktype = SOCK_DGRAM; 
-	hints.ai_flags = 0;  
-    hints.ai_protocol = IPPROTO_UDP; // protocol UDP
-    hints.ai_canonname = NULL;
-    hints.ai_addr = NULL;
+	hints.ai_socktype = SOCK_DGRAM;
+	hints.ai_flags = 0;
+	hints.ai_protocol = IPPROTO_UDP; // protocol UDP
+	hints.ai_canonname = NULL;
+	hints.ai_addr = NULL;
 	hints.ai_next = NULL;
 
 	struct addrinfo *res;
 
-    int val = getaddrinfo(address,NULL,&hints,&res);
-    if(val != 0) 
-    	return gai_strerror(val);
-    *rval = *(struct sockaddr_in6 *) res->ai_addr; // ATTENTION 
+	int val = getaddrinfo(address,NULL,&hints,&res);
+	if(val != 0)
+	return gai_strerror(val);
+	*rval = *(struct sockaddr_in6 *) res->ai_addr;
 
-    return NULL; 
+	return NULL;
 }
 
-int create_socket(struct sockaddr_in6 *source_addr,
-                 int src_port,
-                 struct sockaddr_in6 *dest_addr,
-                 int dst_port){
+int create_socket(struct sockaddr_in6 *source_addr, int src_port,
+	struct sockaddr_in6 *dest_addr,int dst_port){
 
-	int sfd = socket(AF_INET6,SOCK_DGRAM,IPPROTO_UDP); 
+	int sfd = socket(AF_INET6,SOCK_DGRAM,IPPROTO_UDP);
 	if(sfd == -1){
 		fprintf(stderr," Erreur dans la fonction socket : %s \n",strerror(errno));
 		return -1;
 	}
 
 	if(source_addr != NULL && src_port > 0) {
-		source_addr->sin6_port = htons(src_port); 
+		source_addr->sin6_port = htons(src_port);
 		int bin = bind(sfd,(const struct sockaddr *) source_addr,sizeof(struct sockaddr_in6));
 		if(bin == -1){
 			fprintf(stderr,"Erreur dans la fonction bind : %s \n",strerror(errno));
@@ -59,7 +57,7 @@ int create_socket(struct sockaddr_in6 *source_addr,
 		int con = connect(sfd,(const struct sockaddr *) dest_addr,sizeof(struct sockaddr_in6));
 		if(con == -1){
 			fprintf(stderr,"Erreur dans la fonction connect : %s \n",strerror(errno));
-			return -1; 
+			return -1;
 		}
 	}
 
