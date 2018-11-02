@@ -11,11 +11,8 @@ CFLAGS += -g
 
 LFDFLAGS += -lz
 LFDFLAGS += -lcunit
-LFDFLAGS += -L/$(HOME)/local/include 
-LFDFLAGS += -L/$(HOME)/local/lib 
-
-INCLUDE += I$(HOME)/local/include
-INCLUDE += -I$(HOME)/local/lib
+#LFDFLAGS += -L/$(HOME)/local/include 
+#LFDFLAGS += -L/$(HOME)/local/lib 
 
 # Default target
 all: test
