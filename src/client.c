@@ -116,7 +116,7 @@ int read_write_loop(int fd, int sfd){
                         return -1;
                     }
 
-                    fprintf(stderr,"Paquet numéro %d envoyé \n",seqnum);
+                    fprintf(stderr,"\nPaquet numéro %d envoyé \n",seqnum);
 
                     seqnum = (seqnum+1)%256;
                 }
@@ -151,11 +151,11 @@ int read_write_loop(int fd, int sfd){
                     }
 
                     if(pkt_get_type(pkt_ack) == PTYPE_ACK){
-                        fprintf(stderr,"Acquittement %d reçu \n",seq);
+                        fprintf(stderr,"\nAcquittement %d reçu \n\n",seq);
 
                     }
                     else if(pkt_get_type(pkt_ack) == PTYPE_NACK){
-                        fprintf(stderr, "Non-acquittement %d reçu \n",seq);
+                        fprintf(stderr, "\nNon-acquittement %d reçu \n\n",seq);
 
                     }
 

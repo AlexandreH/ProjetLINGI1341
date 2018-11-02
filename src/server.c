@@ -123,7 +123,9 @@ int read_write_loop(int fd,int sfd){
                         uint32_t timestamp = pkt_get_timestamp(pkt_data);
 
                         strncpy(payload,pkt_get_payload(pkt_data),len);
+                        fprintf(stderr,"\n");
                         err = write(fd,payload,len);
+                        fprintf(stderr,"\n");
                         if(err == -1)
                         {
                             fprintf(stderr,"Erreur lors de l'écriture d'un payload : %s \n", strerror(errno));
@@ -152,7 +154,7 @@ int read_write_loop(int fd,int sfd){
                                 fprintf(stderr,"Erreur lors de l'envoi de l'acquittement : %s \n",strerror(errno));
                             }
 
-                            fprintf(stderr, "Acquittement numéro %i envoyé \n",seqnum);
+                            fprintf(stderr, "\nAcquittement numéro %i envoyé \n",seqnum);
 
                             if(len == 0){
                             // fin de la réception de données
